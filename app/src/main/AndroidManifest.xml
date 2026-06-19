@@ -26,6 +26,16 @@
             android:exported="false"
             android:theme="@style/Theme.Promptly"
             android:noHistory="true" />
+        <activity
+            android:name=".ui.intervention.InterventionActivity"
+            android:exported="false"
+            android:excludeFromRecents="true"
+            android:noHistory="true"
+            android:theme="@style/Theme.Promptly" />
+        <activity
+            android:name=".ui.recovery.RecoveryActivity"
+            android:exported="true"
+            android:theme="@style/Theme.Promptly" />
     </application>
 
 </manifest>

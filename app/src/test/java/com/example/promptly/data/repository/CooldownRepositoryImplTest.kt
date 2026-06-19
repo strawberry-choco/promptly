@@ -5,6 +5,8 @@ import io.mockk.every
 import io.mockk.mockk
 import io.mockk.verify
 import kotlinx.coroutines.test.runTest
+import org.junit.jupiter.api.Assertions.assertEquals
+import org.junit.jupiter.api.Assertions.assertNull
 import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Test
 
@@ -27,6 +29,32 @@ class CooldownRepositoryImplTest {
     fun setUp() {
         every { prefs.edit() } returns editor
         repo = CooldownRepositoryImpl(prefs)
+    }
+
+    @Test
+    fun `loadLastTriggerEpochMillis returns value when present`() = runTest {
+        every { prefs.getLong("last_trigger_timestamp", -1L) } returns 5000L
+
+        val result = repo.loadLastTriggerEpochMillis()
+
+        assertEquals(5000L, result)
+    }
+
+    @Test
+    fun `loadLastTriggerEpochMillis returns null when not present`() = runTest {
+        every { prefs.getLong("last_trigger_timestamp", -1L) } returns -1L
+
+        val result = repo.loadLastTriggerEpochMillis()
+
+        assertNull(result)
+    }
+
+    @Test
+    fun `saveLastTriggerEpochMillis stores the timestamp`() = runTest {
+        repo.saveLastTriggerEpochMillis(12345L)
+
+        verify { editor.putLong("last_trigger_timestamp", 12345L) }
+        verify { editor.apply() }
     }
 
     @Test

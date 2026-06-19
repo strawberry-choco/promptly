@@ -31,4 +31,15 @@
     <string name="onboarding_success_title">All set!</string>
     <string name="onboarding_success">Accessibility Service is enabled. You can now configure your intervention preferences.</string>
     <string name="onboarding_continue">Continue to Settings</string>
+
+    <!-- Recovery -->
+    <string name="recovery_title">Service Required</string>
+    <string name="recovery_description">Promptly\'s accessibility service needs to be re-enabled for the app to function.</string>
+    <string name="recovery_re_enable">Re-enable</string>
+
+    <!-- Intervention -->
+    <string name="intervention_title">Focus Time</string>
+    <string name="intervention_description">Take a moment to breathe and refocus.</string>
+    <string name="intervention_dismiss">Dismiss</string>
+    <string name="intervention_target_not_found">Target app not found.</string>
 </resources>

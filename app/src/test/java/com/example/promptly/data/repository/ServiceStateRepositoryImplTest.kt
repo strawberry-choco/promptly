@@ -2,6 +2,7 @@ package com.example.promptly.data.repository
 
 import android.content.Context
 import android.provider.Settings
+import io.mockk.clearAllMocks
 import io.mockk.every
 import io.mockk.mockk
 import io.mockk.mockkStatic
@@ -23,7 +24,7 @@ class ServiceStateRepositoryImplTest {
 
     @AfterEach
     fun tearDown() {
-        unmockkStatic()
+        clearAllMocks()
     }
 
     @Test
