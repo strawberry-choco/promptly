@@ -1,4 +1,34 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
     <string name="app_name">Promptly</string>
+
+    <!-- Settings -->
+    <string name="settings_title">Settings</string>
+    <string name="settings_enabled">Promptly enabled</string>
+    <string name="settings_enabled_description">Allow interventions on phone unlock</string>
+    <string name="settings_target_app">Target app</string>
+    <string name="settings_no_target_app">No target app</string>
+    <string name="settings_chevron">›</string>
+    <string name="settings_cooldown_type">Cooldown type</string>
+    <string name="settings_daily_reset">Daily reset</string>
+    <string name="settings_n_hour_interval">N-hour interval</string>
+    <string name="settings_reset_time">Reset time</string>
+    <string name="settings_interval_hours">Interval</string>
+    <string name="settings_schedule_window">Schedule window</string>
+    <string name="settings_start_time">Start</string>
+    <string name="settings_end_time">End</string>
+    <string name="settings_select_target_app">Select target app</string>
+    <string name="settings_interval_hours_format">%d hours</string>
+    <string name="settings_time_format" formatted="false">%02d:%02d</string>
+    <string name="settings_banner_text">Enable the Accessibility Service to detect phone unlocks and start interventions</string>
+
+    <!-- Onboarding -->
+    <string name="onboarding_loading">Checking setup…</string>
+    <string name="onboarding_title">Enable Accessibility Service</string>
+    <string name="onboarding_description">Promptly needs the Accessibility Service to detect when you unlock your phone. This allows Promptly to show timely interventions and help you stay focused.</string>
+    <string name="onboarding_open_settings">Open Accessibility Settings</string>
+    <string name="onboarding_skip">Skip</string>
+    <string name="onboarding_success_title">All set!</string>
+    <string name="onboarding_success">Accessibility Service is enabled. You can now configure your intervention preferences.</string>
+    <string name="onboarding_continue">Continue to Settings</string>
 </resources>

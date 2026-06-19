@@ -17,6 +17,15 @@
                 <category android:name="android.intent.category.LAUNCHER" />
             </intent-filter>
         </activity>
+        <activity
+            android:name=".ui.settings.SettingsActivity"
+            android:exported="true"
+            android:theme="@style/Theme.Promptly" />
+        <activity
+            android:name=".ui.onboarding.OnboardingActivity"
+            android:exported="false"
+            android:theme="@style/Theme.Promptly"
+            android:noHistory="true" />
     </application>
 
 </manifest>
