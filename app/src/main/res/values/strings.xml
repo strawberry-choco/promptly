@@ -43,5 +43,6 @@
     <string name="intervention_title">Focus Time</string>
     <string name="intervention_description">Take a moment to breathe and refocus.</string>
     <string name="intervention_dismiss">Dismiss</string>
-    <string name="intervention_target_not_found">Target app not found.</string>
+    <string name="intervention_target_not_found">Target app \'%s\' not found.</string>
+    <string name="intervention_launch_failed">Failed to launch \'%s\'.</string>
 </resources>

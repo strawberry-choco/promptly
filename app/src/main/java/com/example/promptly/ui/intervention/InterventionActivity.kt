@@ -69,13 +69,21 @@ class InterventionActivity : AppCompatActivity() {
                             finish()
                         }
                         is InterventionMode.Redirecting -> {
+                            val packageName = state.mode.packageName
                             val intent = packageManager.getLaunchIntentForPackage(
-                                state.mode.packageName
+                                packageName
                             )
                             if (intent != null) {
-                                startActivity(intent)
+                                try {
+                                    startActivity(intent)
+                                    finish()
+                                    return@collect
+                                } catch (e: Exception) {
+                                    viewModel.onAppLaunchFailed(packageName)
+                                }
+                            } else {
+                                viewModel.onAppLaunchFailed(packageName)
                             }
-                            finish()
                         }
                     }
                 }

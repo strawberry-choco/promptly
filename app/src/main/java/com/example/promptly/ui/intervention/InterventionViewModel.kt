@@ -37,7 +37,7 @@ class InterventionViewModel(
                 }
                 is RedirectDecision.Uninstalled -> {
                     _uiState.value = _uiState.value.copy(
-                        errorMessage = "Target app not found."
+                        errorMessage = "Target app '${decision.packageName}' not found."
                     )
                 }
                 is RedirectDecision.NoTarget -> {
@@ -47,6 +47,13 @@ class InterventionViewModel(
                 }
             }
         }
+    }
+
+    fun onAppLaunchFailed(packageName: String) {
+        _uiState.value = _uiState.value.copy(
+            mode = InterventionMode.Showing,
+            errorMessage = "Failed to launch '$packageName'."
+        )
     }
 
     companion object {

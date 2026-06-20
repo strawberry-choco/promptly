@@ -17,6 +17,8 @@ Automatically redirect to a pre-configured target app when the intervention appe
 | 2026-06-20 | TargetAppRepository uses PackageManager.getLaunchIntentForPackage() for install check | Matches requirement doc. Null check on result is reliable detection of installed launcher app. | queryIntentActivities (more complex, same result); ACTION_PACKAGE_REMOVED broadcast (unreliable timing) |
 | 2026-06-20 | clearTargetAppSetting via SettingsRepository.save() with null package | Reuses existing repository contract — no new persistence method needed. Single source of truth for settings. | New clearTargetApp on SettingsRepository (unnecessary method proliferation) |
 | 2026-06-20 | stopLockTask via existing InterventionUseCase.dismiss() before redirect | Reuses established lock-task stop logic. Single code path for ending lock task — dismiss and redirect share the same mechanism. | Duplicate stopLockTask call (code duplication, two code paths to maintain) |
+| 2026-06-20 | RedirectDecision.Uninstalled carries packageName (data class), not data object | Enables error messages to show target app name. Package name is domain data, not a display string — architecturally correct for domain layer. | Keeping Uninstalled as data object and passing packageName separately (extra complexity, two sources of truth) |
+| 2026-06-20 | Launch failures in InterventionActivity caught and reported via ViewModel.onAppLaunchFailed() | Prevents silent finish() on redirect failure. ViewModel controls state; Activity notifies on failure. | Handling error entirely in Activity (breaks MVVM pattern); ignoring failure (existing bug behavior) |
 
 ## Open Questions
 
@@ -31,11 +33,12 @@ Automatically redirect to a pre-configured target app when the intervention appe
 ## Implementation Notes
 
 - Auto-redirect delay set to 1500ms. Matching requirement "1-2 seconds".
-- `RedirectDecision.Uninstalled` changed from data class to data object — message moved to ViewModel (UI layer) to avoid hardcoding display strings in domain. ViewModel uses literal string; `R.string.intervention_target_not_found` available for future localization.
+- `RedirectDecision.Uninstalled` carries packageName (data class) — package name is domain data, not a display string. ViewModel formats the error message with the package name.
+- Launch failures in `InterventionActivity.Redirecting` mode are caught and reported via `ViewModel.onAppLaunchFailed()` instead of silently calling `finish()`. This prevents the intervention from disappearing without feedback.
 - All three requirement scenarios implemented:
   - Scenario 1: Target app configured → auto-redirect after 1.5s delay
   - Scenario 2: No target → Dismiss-only (existing behavior, no changes)
-  - Scenario 3: Uninstalled → error message + setting cleared + manual dismiss
+  - Scenario 3: Uninstalled → error message (with app name) + setting cleared + manual dismiss
 
 ## Key Files
 

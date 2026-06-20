@@ -15,7 +15,7 @@ class AppRedirectUseCase(
             RedirectDecision.Ready(packageName)
         } else {
             settingsRepository.save(settings.copy(targetAppPackage = null))
-            RedirectDecision.Uninstalled
+            RedirectDecision.Uninstalled(packageName)
         }
     }
 }

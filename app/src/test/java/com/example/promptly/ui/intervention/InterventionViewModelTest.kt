@@ -139,15 +139,29 @@ class InterventionViewModelTest {
 
     // Regression: Uninstalled decision should set error message
     @Test
-    fun `onCreated with Uninstalled decision shows error message`() = runTest(testDispatcher) {
+    fun `onCreated with Uninstalled decision shows error message with package name`() = runTest(testDispatcher) {
         coEvery { useCase.prepare() } returns InterventionConfig.Locked
-        coEvery { appRedirectUseCase.evaluate() } returns RedirectDecision.Uninstalled
+        coEvery { appRedirectUseCase.evaluate() } returns RedirectDecision.Uninstalled("com.example.target")
 
         val vm = InterventionViewModel(useCase, appRedirectUseCase)
         vm.onCreated(0L)
 
         val state = vm.uiState.first()
-        assertEquals("Target app not found.", state.errorMessage)
+        assertEquals("Target app 'com.example.target' not found.", state.errorMessage)
+    }
+
+    @Test
+    fun `onAppLaunchFailed shows error with package name`() = runTest(testDispatcher) {
+        coEvery { useCase.prepare() } returns InterventionConfig.Locked
+        coEvery { appRedirectUseCase.evaluate() } returns RedirectDecision.NoTarget
+
+        val vm = InterventionViewModel(useCase, appRedirectUseCase)
+        vm.onCreated(0L)
+        vm.onAppLaunchFailed("com.example.broken")
+
+        val state = vm.uiState.first()
+        assertEquals("Failed to launch 'com.example.broken'.", state.errorMessage)
+        assertEquals(InterventionMode.Showing, state.mode)
     }
 
     // BUG: NoTarget decision should provide user feedback, not stay silent

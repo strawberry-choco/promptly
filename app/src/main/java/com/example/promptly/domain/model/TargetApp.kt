@@ -8,7 +8,7 @@ data class TargetApp(
         val CURATED_LIST = listOf(
             TargetApp("No target app", null),
             TargetApp("Anki", "com.ichi2.anki"),
-            TargetApp("Medito", "medito.app")
+            TargetApp("Medito", "meditofoundation.medito")
         )
     }
 }

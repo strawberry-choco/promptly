@@ -37,14 +37,14 @@ class AppRedirectUseCaseTest {
     }
 
     @Test
-    fun `returns Uninstalled and clears target when target app not installed`() = runTest {
+    fun `returns Uninstalled with packageName and clears target when target app not installed`() = runTest {
         coEvery { settingsRepository.load() } returns Settings(targetAppPackage = "com.example.anki")
         coEvery { targetAppRepository.isInstalled("com.example.anki") } returns false
         coEvery { settingsRepository.save(any()) } returns Unit
 
         val result = useCase.evaluate()
 
-        assertEquals(RedirectDecision.Uninstalled, result)
+        assertEquals(RedirectDecision.Uninstalled("com.example.anki"), result)
         coVerify { settingsRepository.save(match { it.targetAppPackage == null }) }
     }
 }
