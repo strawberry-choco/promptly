@@ -4,6 +4,8 @@ import android.content.SharedPreferences
 import com.example.promptly.domain.model.CooldownConfig
 import com.example.promptly.domain.model.Settings
 import com.example.promptly.domain.repository.SettingsRepository
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.withContext
 import java.time.LocalTime
 import java.time.format.DateTimeFormatter
 
@@ -39,24 +41,26 @@ class SettingsRepositoryImpl(
     }
 
     override suspend fun save(settings: Settings) {
-        prefs.edit()
-            .putBoolean(KEY_ENABLED, settings.enabled)
-            .putString(KEY_TARGET_APP, settings.targetAppPackage)
-            .putString(KEY_SCHEDULE_START, formatTime(settings.scheduleStart))
-            .putString(KEY_SCHEDULE_END, formatTime(settings.scheduleEnd))
-            .apply()
-        when (val config = settings.cooldownConfig) {
-            is CooldownConfig.DailyReset -> {
-                prefs.edit()
-                    .putString(KEY_COOLDOWN_TYPE, TYPE_DAILY_RESET)
-                    .putString(KEY_RESET_TIME, formatTime(config.resetTime))
-                    .apply()
-            }
-            is CooldownConfig.NHourInterval -> {
-                prefs.edit()
-                    .putString(KEY_COOLDOWN_TYPE, TYPE_N_HOUR)
-                    .putInt(KEY_INTERVAL_HOURS, config.intervalHours)
-                    .apply()
+        withContext(Dispatchers.IO) {
+            prefs.edit()
+                .putBoolean(KEY_ENABLED, settings.enabled)
+                .putString(KEY_TARGET_APP, settings.targetAppPackage)
+                .putString(KEY_SCHEDULE_START, formatTime(settings.scheduleStart))
+                .putString(KEY_SCHEDULE_END, formatTime(settings.scheduleEnd))
+                .commit()
+            when (val config = settings.cooldownConfig) {
+                is CooldownConfig.DailyReset -> {
+                    prefs.edit()
+                        .putString(KEY_COOLDOWN_TYPE, TYPE_DAILY_RESET)
+                        .putString(KEY_RESET_TIME, formatTime(config.resetTime))
+                        .commit()
+                }
+                is CooldownConfig.NHourInterval -> {
+                    prefs.edit()
+                        .putString(KEY_COOLDOWN_TYPE, TYPE_N_HOUR)
+                        .putInt(KEY_INTERVAL_HOURS, config.intervalHours)
+                        .commit()
+                }
             }
         }
     }

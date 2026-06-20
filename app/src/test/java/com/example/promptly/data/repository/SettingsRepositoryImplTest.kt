@@ -6,13 +6,17 @@ import com.example.promptly.domain.model.Settings
 import io.mockk.every
 import io.mockk.mockk
 import io.mockk.verify
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.test.runTest
+import kotlinx.coroutines.test.setMain
 import org.junit.jupiter.api.Assertions.assertEquals
 import org.junit.jupiter.api.Assertions.assertNull
 import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Test
 import java.time.LocalTime
 
+@OptIn(ExperimentalCoroutinesApi::class)
 class SettingsRepositoryImplTest {
 
     private val prefs = mockk<SharedPreferences>(relaxed = true)
@@ -25,11 +29,13 @@ class SettingsRepositoryImplTest {
         every { putStringSet(any(), any()) } returns this
         every { remove(any()) } returns this
         every { clear() } returns this
+        every { commit() } returns true
     }
     private lateinit var repo: SettingsRepositoryImpl
 
     @BeforeEach
     fun setUp() {
+        Dispatchers.setMain(Dispatchers.Unconfined)
         every { prefs.edit() } returns editor
         repo = SettingsRepositoryImpl(prefs)
     }
@@ -82,7 +88,7 @@ class SettingsRepositoryImplTest {
         verify { editor.putString("schedule_end", "23:00:00") }
         verify { editor.putString("cooldown_type", "daily_reset") }
         verify { editor.putString("reset_time", "02:00:00") }
-        verify(exactly = 2) { editor.apply() }
+        verify(exactly = 2) { editor.commit() }
     }
 
     @Test
@@ -95,7 +101,7 @@ class SettingsRepositoryImplTest {
 
         verify { editor.putString("cooldown_type", "n_hour") }
         verify { editor.putInt("interval_hours", 12) }
-        verify(exactly = 2) { editor.apply() }
+        verify(exactly = 2) { editor.commit() }
     }
 
     @Test
@@ -120,6 +126,6 @@ class SettingsRepositoryImplTest {
         repo.save(settings)
 
         verify { editor.putString("target_app_package", null as String?) }
-        verify(exactly = 2) { editor.apply() }
+        verify(exactly = 2) { editor.commit() }
     }
 }
