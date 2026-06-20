@@ -10,6 +10,7 @@ import io.mockk.mockk
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.flow.first
+import kotlinx.coroutines.launch
 import kotlinx.coroutines.test.UnconfinedTestDispatcher
 import kotlinx.coroutines.test.resetMain
 import kotlinx.coroutines.test.runTest
@@ -162,4 +163,22 @@ class SettingsViewModelTest {
 
         assertEquals(newTime, vm.uiState.first().scheduleEnd)
     }
+
+    @Test
+    fun `onLaunchIntervention emits LaunchIntervention event`() = runTest(testDispatcher) {
+        val initial = Settings()
+        coEvery { settingsUseCase.load() } returns initial
+        coEvery { onboardingUseCase.checkServiceEnabled() } returns true
+
+        val vm = SettingsViewModel(settingsUseCase, onboardingUseCase)
+        val events = mutableListOf<SettingsEvent>()
+        val job = launch { vm.events.collect { events.add(it) } }
+
+        vm.onLaunchIntervention()
+
+        assertEquals(listOf(SettingsEvent.LaunchIntervention), events)
+        job.cancel()
+    }
+
+
 }

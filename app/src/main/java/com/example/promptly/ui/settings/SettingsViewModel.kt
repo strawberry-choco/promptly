@@ -6,8 +6,11 @@ import com.example.promptly.domain.model.CooldownConfig
 import com.example.promptly.domain.model.Settings
 import com.example.promptly.domain.usecase.OnboardingUseCase
 import com.example.promptly.domain.usecase.SettingsUseCase
+import kotlinx.coroutines.flow.MutableSharedFlow
 import kotlinx.coroutines.flow.MutableStateFlow
+import kotlinx.coroutines.flow.SharedFlow
 import kotlinx.coroutines.flow.StateFlow
+import kotlinx.coroutines.flow.asSharedFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.launch
 import java.time.LocalTime
@@ -19,6 +22,9 @@ class SettingsViewModel(
 
     private val _uiState = MutableStateFlow(SettingsUiState())
     val uiState: StateFlow<SettingsUiState> = _uiState.asStateFlow()
+
+    private val _events = MutableSharedFlow<SettingsEvent>(extraBufferCapacity = 1)
+    val events: SharedFlow<SettingsEvent> = _events.asSharedFlow()
 
     init {
         loadSettings()
@@ -39,6 +45,12 @@ class SettingsViewModel(
                 serviceEnabled = enabled,
                 showBanner = !enabled
             )
+        }
+    }
+
+    fun onLaunchIntervention() {
+        viewModelScope.launch {
+            _events.emit(SettingsEvent.LaunchIntervention)
         }
     }
 

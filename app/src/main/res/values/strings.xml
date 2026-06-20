@@ -21,6 +21,8 @@
     <string name="settings_interval_hours_format">%d hours</string>
     <string name="settings_time_format" formatted="false">%02d:%02d</string>
     <string name="settings_banner_text">Enable the Accessibility Service to detect phone unlocks and start interventions</string>
+    <string name="settings_launch_intervention">Launch intervention now</string>
+    <string name="settings_launch_intervention_description">Preview the intervention without waiting for cooldown or schedule</string>
 
     <!-- Onboarding -->
     <string name="onboarding_loading">Checking setup…</string>

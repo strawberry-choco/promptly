@@ -18,6 +18,11 @@ Experiential patterns from practice. Complements standards (what should be) with
 - 2026-06-15 [implementation] JUnit 5 over kotlin.test for Android unit tests — Use `org.junit.jupiter.api.Assertions.*` imports. Avoid `kotlin.test` package which needs an explicit `kotlin-test` dependency that may version-conflict with the project's Kotlin version.
 - 2026-06-19 [implementation] Inject ZoneId with systemDefault default for timezone-aware domain services — When a pure domain service computes dates/times (daily reset, schedule windows), accept `ZoneId` as a constructor parameter defaulting to `ZoneId.systemDefault()`. Tests inject a fixed zone for deterministic results without Android instrumentation. Production behavior unchanged; test determinism guaranteed.
 - 2026-06-20 [implementation] Timing concerns (delays, countdowns) in ViewModel, not domain — When a feature needs a brief delay before acting (e.g., 1.5s auto-redirect), the delay belongs in the ViewModel via `kotlinx.coroutines.delay()`. The domain use case is synchronous from the caller's perspective; timing is a UI-layer concern. Keeps domain logic testable without virtual time.
+- 2026-06-20 [implementation] Buffer capacity for ViewModel-emitted SharedFlow events — When a ViewModel emits one-shot events via SharedFlow to an Activity collector, use `extraBufferCapacity = 1` on the `MutableSharedFlow`. The default (`extraBufferCapacity = 0`) causes `emit` to suspend when no collector is attached (test setup or lifecycle timing gaps). Buffer of 1 preserves at-most-once semantics while avoiding suspension in tests and production.
+
+## Process
+
+- 2026-06-20 [process] Follow skill workflow before coding — When a skill is loaded and the task matches it, execute the workflow steps in order before writing any code. For requirement-forge: Step 1 (check existing docs), Step 2 (intake), Step 3-4 (epic/feature discovery), Step 5 (spec draft), Step 6 (finalize). The output is a spec document, not implementation. Breaking the sequence (e.g., coding directly without intake or writing a feature spec first) violates the protocol and produces wrong output.
 
 ## Quality Signals
 <!-- Recurring quality issues that keep appearing despite rules -->

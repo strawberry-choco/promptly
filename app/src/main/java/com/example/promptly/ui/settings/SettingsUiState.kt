@@ -4,6 +4,10 @@ import com.example.promptly.domain.model.CooldownConfig
 import com.example.promptly.domain.model.Settings
 import java.time.LocalTime
 
+sealed interface SettingsEvent {
+    data object LaunchIntervention : SettingsEvent
+}
+
 data class SettingsUiState(
     val enabled: Boolean = false,
     val cooldownConfig: CooldownConfig = CooldownConfig.DailyReset(LocalTime.MIDNIGHT),

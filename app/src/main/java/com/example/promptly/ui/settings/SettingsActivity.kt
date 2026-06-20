@@ -23,6 +23,7 @@ import com.example.promptly.domain.usecase.OnboardingUseCase
 import com.example.promptly.domain.usecase.SettingsUseCase
 import com.example.promptly.databinding.ActivitySettingsBinding
 import com.example.promptly.R
+import com.example.promptly.ui.intervention.InterventionActivity
 import com.google.android.material.timepicker.MaterialTimePicker
 import com.google.android.material.timepicker.TimeFormat
 import kotlinx.coroutines.launch
@@ -43,6 +44,7 @@ class SettingsActivity : AppCompatActivity() {
         setContentView(binding.root)
 
         observeState()
+        observeEvents()
         setupListeners()
     }
 
@@ -85,6 +87,24 @@ class SettingsActivity : AppCompatActivity() {
 
                     binding.scheduleStartValue.text = formatTime(state.scheduleStart)
                     binding.scheduleEndValue.text = formatTime(state.scheduleEnd)
+                }
+            }
+        }
+    }
+
+    private fun observeEvents() {
+        lifecycleScope.launch {
+            repeatOnLifecycle(Lifecycle.State.STARTED) {
+                viewModel.events.collect { event ->
+                    when (event) {
+                        is SettingsEvent.LaunchIntervention -> {
+                            val intent = Intent(
+                                this@SettingsActivity,
+                                InterventionActivity::class.java
+                            )
+                            startActivity(intent)
+                        }
+                    }
                 }
             }
         }
@@ -139,6 +159,10 @@ class SettingsActivity : AppCompatActivity() {
             showTimePicker(viewModel.uiState.value.scheduleEnd) { time ->
                 viewModel.onScheduleEndChanged(time)
             }
+        }
+
+        binding.launchInterventionRow.setOnClickListener {
+            viewModel.onLaunchIntervention()
         }
     }
 
