@@ -19,14 +19,14 @@ class InterventionViewModel(
     private val _uiState = MutableStateFlow(InterventionUiState())
     val uiState: StateFlow<InterventionUiState> = _uiState.asStateFlow()
 
-    fun onCreated() {
+    fun onCreated(preRedirectDelayMs: Long = PRE_REDIRECT_DELAY_MS) {
         viewModelScope.launch {
             val config = interventionUseCase.prepare()
             _uiState.value = _uiState.value.copy(
                 mode = InterventionMode.Showing,
                 config = config
             )
-            delay(1500L)
+            delay(preRedirectDelayMs)
             val decision = appRedirectUseCase.evaluate()
             when (decision) {
                 is RedirectDecision.Ready -> {
@@ -41,10 +41,16 @@ class InterventionViewModel(
                     )
                 }
                 is RedirectDecision.NoTarget -> {
-                    // stay in Showing mode with dismiss only
+                    _uiState.value = _uiState.value.copy(
+                        errorMessage = "No target app configured."
+                    )
                 }
             }
         }
+    }
+
+    companion object {
+        internal const val PRE_REDIRECT_DELAY_MS = 1500L
     }
 
     fun onDismiss() {

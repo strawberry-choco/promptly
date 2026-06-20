@@ -122,4 +122,44 @@ class InterventionViewModelTest {
 
         coVerify(exactly = 0) { useCase.onResurface() }
     }
+
+    // Regression: Ready decision should transition to Redirecting mode
+    @Test
+    fun `onCreated with Ready decision transitions to Redirecting`() = runTest(testDispatcher) {
+        coEvery { useCase.prepare() } returns InterventionConfig.Locked
+        coEvery { useCase.dismiss() } returns Unit
+        coEvery { appRedirectUseCase.evaluate() } returns RedirectDecision.Ready("com.example.test")
+
+        val vm = InterventionViewModel(useCase, appRedirectUseCase)
+        vm.onCreated(0L)
+
+        val state = vm.uiState.first()
+        assertEquals(InterventionMode.Redirecting("com.example.test"), state.mode)
+    }
+
+    // Regression: Uninstalled decision should set error message
+    @Test
+    fun `onCreated with Uninstalled decision shows error message`() = runTest(testDispatcher) {
+        coEvery { useCase.prepare() } returns InterventionConfig.Locked
+        coEvery { appRedirectUseCase.evaluate() } returns RedirectDecision.Uninstalled
+
+        val vm = InterventionViewModel(useCase, appRedirectUseCase)
+        vm.onCreated(0L)
+
+        val state = vm.uiState.first()
+        assertEquals("Target app not found.", state.errorMessage)
+    }
+
+    // BUG: NoTarget decision should provide user feedback, not stay silent
+    @Test
+    fun `onCreated with NoTarget decision shows helpful message`() = runTest(testDispatcher) {
+        coEvery { useCase.prepare() } returns InterventionConfig.Locked
+        coEvery { appRedirectUseCase.evaluate() } returns RedirectDecision.NoTarget
+
+        val vm = InterventionViewModel(useCase, appRedirectUseCase)
+        vm.onCreated(0L)
+
+        val state = vm.uiState.first()
+        assertEquals("No target app configured.", state.errorMessage)
+    }
 }
