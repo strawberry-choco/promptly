@@ -5,9 +5,7 @@ import android.content.Intent
 import android.view.accessibility.AccessibilityEvent
 import com.example.promptly.data.repository.CooldownRepositoryImpl
 import com.example.promptly.data.repository.SettingsRepositoryImpl
-import com.example.promptly.data.repository.TargetAppRepositoryImpl
 import com.example.promptly.domain.service.CooldownEligibilityService
-import com.example.promptly.domain.usecase.AppRedirectUseCase
 import com.example.promptly.domain.usecase.CheckCooldownUseCase
 import com.example.promptly.domain.usecase.RecordCooldownTriggerUseCase
 import kotlinx.coroutines.CoroutineScope
@@ -20,18 +18,15 @@ class PromptlyAccessibilityService : AccessibilityService() {
     private val scope = CoroutineScope(SupervisorJob() + Dispatchers.IO)
     private var currentForegroundPackage: String? = null
 
-    private lateinit var appRedirectUseCase: AppRedirectUseCase
     private lateinit var checkCooldownUseCase: CheckCooldownUseCase
     private lateinit var recordCooldownTriggerUseCase: RecordCooldownTriggerUseCase
 
     override fun onServiceConnected() {
         val prefs = getSharedPreferences("promptly_prefs", MODE_PRIVATE)
         val settingsRepository = SettingsRepositoryImpl(prefs)
-        val targetAppRepository = TargetAppRepositoryImpl(packageManager)
         val cooldownRepository = CooldownRepositoryImpl(prefs)
         val eligibilityService = CooldownEligibilityService()
 
-        appRedirectUseCase = AppRedirectUseCase(settingsRepository, targetAppRepository)
         checkCooldownUseCase = CheckCooldownUseCase(settingsRepository, cooldownRepository, eligibilityService)
         recordCooldownTriggerUseCase = RecordCooldownTriggerUseCase(cooldownRepository)
     }
@@ -43,13 +38,6 @@ class PromptlyAccessibilityService : AccessibilityService() {
         currentForegroundPackage = packageName
 
         scope.launch {
-            val decision = appRedirectUseCase.evaluate()
-            val targetPackage = when (decision) {
-                is com.example.promptly.domain.model.RedirectDecision.Ready -> decision.packageName
-                else -> return@launch
-            }
-            if (packageName != targetPackage) return@launch
-
             if (checkCooldownUseCase() != com.example.promptly.domain.model.EligibilityResult.Eligible) return@launch
 
             recordCooldownTriggerUseCase()
