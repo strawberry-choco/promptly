@@ -4,6 +4,9 @@ Experiential patterns from practice. Complements standards (what should be) with
 
 ## Design Patterns
 
+- 2026-06-21 [design] Cross-reference existing design docs against requirement specs when resuming — When loading an existing context anchor doc during design-blueprint, actively verify each design level against the linked requirement doc. Design drift accumulates silently between sessions; catching it during Step 1 context review is cheaper than implementing against the wrong spec.
+- 2026-06-21 [design] Inline value class with private constructor + fromRaw factory for format-validated strings — When a domain concept is a string with format rules, use `@JvmInline value class` with a `fromRaw(): Result<T>` companion factory. Zero allocation overhead, self-documenting type, validation at construction boundary.
+
 - 2026-06-14 [design] Sum types over nullable fields for variant config models — When a model has conditional fields based on a discriminator (e.g., cooldown type), use a sealed interface/class instead of nullable fields. Prevents illegal state combinations at compile time.
 - 2026-06-14 [design] UseCase as cross-context orchestrator — When a domain action triggers side effects in another area (settings change → cooldown state reset), the UseCase coordinates both repositories rather than leaking orchestration into the ViewModel or a single repository.
 - 2026-06-19 [design] Activity-coupled framework APIs wrapped via domain interface + Data impl — When a domain operation requires an Activity lifecycle (e.g., startLockTask/stopLockTask), define the interface in domain (pure Kotlin) and implement it in data layer with Activity reference. Pattern already established by ServiceStateRepositoryImpl receiving Context; keeps domain testable while acknowledging framework reality.

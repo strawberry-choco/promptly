@@ -1,12 +1,13 @@
 package com.example.promptly.ui.settings
 
-import android.app.AlertDialog
 import android.content.Intent
 import android.os.Bundle
 import android.provider.Settings
+import android.widget.EditText
 import android.widget.NumberPicker
 import androidx.activity.enableEdgeToEdge
 import androidx.activity.viewModels
+import androidx.appcompat.app.AlertDialog
 import androidx.appcompat.app.AppCompatActivity
 import androidx.core.view.ViewCompat
 import androidx.core.view.WindowInsetsCompat
@@ -16,16 +17,16 @@ import androidx.lifecycle.ViewModel
 import androidx.lifecycle.ViewModelProvider
 import androidx.lifecycle.lifecycleScope
 import androidx.lifecycle.repeatOnLifecycle
+import com.example.promptly.R
 import com.example.promptly.data.repository.CooldownRepositoryImpl
 import com.example.promptly.data.repository.OnboardingRepositoryImpl
 import com.example.promptly.data.repository.ServiceStateRepositoryImpl
 import com.example.promptly.data.repository.SettingsRepositoryImpl
+import com.example.promptly.databinding.ActivitySettingsBinding
 import com.example.promptly.domain.model.CooldownConfig
-import com.example.promptly.domain.model.TargetApp
+import com.example.promptly.domain.model.PackageName
 import com.example.promptly.domain.usecase.OnboardingUseCase
 import com.example.promptly.domain.usecase.SettingsUseCase
-import com.example.promptly.databinding.ActivitySettingsBinding
-import com.example.promptly.R
 import com.example.promptly.ui.intervention.InterventionActivity
 import com.google.android.material.timepicker.MaterialTimePicker
 import com.google.android.material.timepicker.TimeFormat
@@ -76,10 +77,7 @@ class SettingsActivity : AppCompatActivity() {
 
                     binding.enabledSwitch.isChecked = state.enabled
 
-                    val targetApp = TargetApp.CURATED_LIST.find {
-                        it.packageName == state.targetAppPackage
-                    }
-                    binding.targetAppSummary.text = targetApp?.displayName
+                    binding.targetAppSummary.text = state.targetAppPackage?.value
                         ?: getString(R.string.settings_no_target_app)
 
                     when (val config = state.cooldownConfig) {
@@ -134,7 +132,7 @@ class SettingsActivity : AppCompatActivity() {
         }
 
         binding.targetAppRow.setOnClickListener {
-            showTargetAppPicker()
+            showTargetAppDialog()
         }
 
         binding.cooldownToggleGroup.addOnButtonCheckedListener { _, checkedId, isChecked ->
@@ -180,21 +178,40 @@ class SettingsActivity : AppCompatActivity() {
         }
     }
 
-    private fun showTargetAppPicker() {
-        val apps = TargetApp.CURATED_LIST
-        val names = apps.map { it.displayName }.toTypedArray()
-        val selectedIndex = apps.indexOfFirst {
-            it.packageName == viewModel.uiState.value.targetAppPackage
-        }.takeIf { it >= 0 } ?: 0
+    private fun showTargetAppDialog() {
+        val input = EditText(this).apply {
+            setText(viewModel.uiState.value.targetAppPackage?.value ?: "")
+            hint = "com.example.app"
+        }
 
-        AlertDialog.Builder(this)
-            .setTitle(R.string.settings_select_target_app)
-            .setSingleChoiceItems(names, selectedIndex) { dialog, which ->
-                viewModel.onTargetAppChanged(apps[which].packageName)
-                dialog.dismiss()
-            }
+        val dialog = AlertDialog.Builder(this)
+            .setTitle(R.string.settings_target_app)
+            .setView(input)
+            .setPositiveButton(android.R.string.ok, null)
             .setNegativeButton(android.R.string.cancel, null)
-            .show()
+            .create()
+
+        dialog.setOnShowListener {
+            dialog.getButton(AlertDialog.BUTTON_POSITIVE).setOnClickListener {
+                val text = input.text.toString().trim()
+
+                if (text.isEmpty()) {
+                    viewModel.onTargetAppChanged(null)
+                    dialog.dismiss()
+                } else {
+                    PackageName.fromRaw(text)
+                        .onSuccess { pkg ->
+                            viewModel.onTargetAppChanged(pkg)
+                            dialog.dismiss()
+                        }
+                        .onFailure { e ->
+                            input.error = e.message
+                        }
+                }
+            }
+        }
+
+        dialog.show()
     }
 
     private fun showTimePicker(current: LocalTime, onSelected: (LocalTime) -> Unit) {

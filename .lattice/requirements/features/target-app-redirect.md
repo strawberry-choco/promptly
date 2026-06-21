@@ -33,7 +33,7 @@ Same personas as Intervention Display. The redirect targets differ by persona:
 - Auto-redirect to the configured target app when intervention appears
 - Fallback to Dismiss-only intervention when no target app is configured
 - Detection and handling of uninstalled target app (clear setting, show message)
-- Target app selection via PackageManager query of CATEGORY_LAUNCHER apps
+- Target app package name sourced from the free-form text entry in Settings UI
 - stopLockTask before launching target app
 
 **Out of scope:**
@@ -52,10 +52,10 @@ Same personas as Intervention Display. The redirect targets differ by persona:
 
 ## Assumptions
 
-- PackageManager query for CATEGORY_LAUNCHER activities returns the correct set of installed launcher apps
-- `startActivity()` with the target package's launch intent works for any launcher app
-- The user selects a target app through the Settings UI (handled by Settings UI feature)
-- The app uninstall broadcast (ACTION_PACKAGE_REMOVED) may not arrive in time — checking at unlock time is the reliable detection point
+- The target app package name is entered by the user in the Settings UI (handled by Settings UI feature)
+- The package name is validated for format at entry time, but installation is only verified at redirect time
+- `startActivity()` with the target package's launch intent works for any installed app with a launcher activity
+- The app uninstall broadcast (ACTION_PACKAGE_REMOVED) may not arrive in time — checking at unlock time via PackageManager is the reliable detection point
 
 ## Scenarios
 

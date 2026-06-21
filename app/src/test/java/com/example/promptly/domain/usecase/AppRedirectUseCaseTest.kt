@@ -1,5 +1,6 @@
 package com.example.promptly.domain.usecase
 
+import com.example.promptly.domain.model.PackageName
 import com.example.promptly.domain.model.RedirectDecision
 import com.example.promptly.domain.model.Settings
 import com.example.promptly.domain.repository.SettingsRepository
@@ -28,7 +29,8 @@ class AppRedirectUseCaseTest {
 
     @Test
     fun `returns Ready when target app is installed`() = runTest {
-        coEvery { settingsRepository.load() } returns Settings(targetAppPackage = "com.example.anki")
+        val pkg = PackageName.fromRaw("com.example.anki").getOrThrow()
+        coEvery { settingsRepository.load() } returns Settings(targetAppPackage = pkg)
         coEvery { targetAppRepository.isInstalled("com.example.anki") } returns true
 
         val result = useCase.evaluate()
@@ -38,7 +40,8 @@ class AppRedirectUseCaseTest {
 
     @Test
     fun `returns Uninstalled with packageName and clears target when target app not installed`() = runTest {
-        coEvery { settingsRepository.load() } returns Settings(targetAppPackage = "com.example.anki")
+        val pkg = PackageName.fromRaw("com.example.anki").getOrThrow()
+        coEvery { settingsRepository.load() } returns Settings(targetAppPackage = pkg)
         coEvery { targetAppRepository.isInstalled("com.example.anki") } returns false
         coEvery { settingsRepository.save(any()) } returns Unit
 

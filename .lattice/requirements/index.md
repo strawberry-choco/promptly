@@ -1,6 +1,6 @@
 ---
 project: Promptly
-last_updated: 2026-06-20
+last_updated: 2026-06-21
 ---
 
 # Requirements Index — Promptly
@@ -15,11 +15,24 @@ last_updated: 2026-06-20
 
 ## Epics
 
-### Settings & Intervention Control
+### App Configuration
 
-Settings configuration (target app, cooldown, schedule) plus the intervention screen that blocks and redirects the user. This epic covers all user-facing controls and the intervention display behavior.
+Settings screen, onboarding flow, and service-loss recovery. Covers all setup and ongoing configuration surfaces.
 
 | Feature | Summary | Status | Priority | Depends On |
 |---|---|---|---|---|
-| [Manual Intervention Launch](features/manual-intervention-launch.md) | Button in settings to launch the intervention immediately, bypassing cooldown and schedule checks | draft | P1 | — |
-| [Remove Intervention Pinning](features/remove-intervention-pinning.md) | Remove lock task pinning from the intervention so redirect works reliably and Back/Home navigation is restored | draft | P1 | — |
+| [Settings UI](features/settings-ui.md) | Main settings screen with all configurable parameters | draft | P0 | — |
+| [Onboarding & Permissions](features/onboarding-permissions.md) | First-launch accessibility service setup flow | draft | P1 | Settings UI |
+| [Service Loss Recovery](features/service-loss-recovery.md) | Re-prompt when the accessibility service is disabled after onboarding | draft | P1 | Settings UI, Onboarding & Permissions |
+
+### Intervention Engine
+
+The core intervention behavior — display, redirect, cooldown/schedule, manual launch, and pinning removal.
+
+| Feature | Summary | Status | Priority | Depends On |
+|---|---|---|---|---|
+| [Intervention Display](features/intervention-display.md) | Full-screen activity on unlock with Dismiss button | draft | P0 | — |
+| [Cooldown Schedule](features/cooldown-schedule.md) | Cooldown and schedule window rules that gate intervention firing | draft | P1 | Intervention Display |
+| [Target App Redirect](features/target-app-redirect.md) | Auto-redirect to a configured app after intervention display | draft | P1 | Intervention Display |
+| [Manual Intervention Launch](features/manual-intervention-launch.md) | Button in settings to launch the intervention immediately | draft | P1 | — |
+| [Remove Intervention Pinning](features/remove-intervention-pinning.md) | Remove lock task pinning from the intervention activity | draft | P1 | — |

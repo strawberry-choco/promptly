@@ -2,6 +2,7 @@ package com.example.promptly.data.repository
 
 import android.content.SharedPreferences
 import com.example.promptly.domain.model.CooldownConfig
+import com.example.promptly.domain.model.PackageName
 import com.example.promptly.domain.model.Settings
 import io.mockk.every
 import io.mockk.mockk
@@ -65,17 +66,21 @@ class SettingsRepositoryImplTest {
 
         assertEquals(true, result.enabled)
         assertEquals(CooldownConfig.NHourInterval(6), result.cooldownConfig)
-        assertEquals("com.ichi2.anki", result.targetAppPackage)
+        assertEquals(
+            PackageName.fromRaw("com.ichi2.anki").getOrThrow(),
+            result.targetAppPackage
+        )
         assertEquals(LocalTime.of(8, 0), result.scheduleStart)
         assertEquals(LocalTime.of(22, 0), result.scheduleEnd)
     }
 
     @Test
     fun `save writes all settings to preferences`() = runTest {
+        val pkg = PackageName.fromRaw("medito.app").getOrThrow()
         val settings = Settings(
             enabled = true,
             cooldownConfig = CooldownConfig.DailyReset(LocalTime.of(2, 0)),
-            targetAppPackage = "medito.app",
+            targetAppPackage = pkg,
             scheduleStart = LocalTime.of(7, 0),
             scheduleEnd = LocalTime.of(23, 0)
         )

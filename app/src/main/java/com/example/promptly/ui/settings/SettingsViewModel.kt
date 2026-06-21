@@ -3,6 +3,7 @@ package com.example.promptly.ui.settings
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.example.promptly.domain.model.CooldownConfig
+import com.example.promptly.domain.model.PackageName
 import com.example.promptly.domain.model.Settings
 import com.example.promptly.domain.usecase.OnboardingUseCase
 import com.example.promptly.domain.usecase.SettingsUseCase
@@ -56,23 +57,23 @@ class SettingsViewModel(
 
     fun onEnabledChanged(enabled: Boolean) {
         viewModelScope.launch {
-            val darkMode = _uiState.value
+            val current = _uiState.value
             val settings = Settings(
                 enabled = enabled,
-                cooldownConfig = darkMode.cooldownConfig,
-                targetAppPackage = darkMode.targetAppPackage,
-                scheduleStart = darkMode.scheduleStart,
-                scheduleEnd = darkMode.scheduleEnd
+                cooldownConfig = current.cooldownConfig,
+                targetAppPackage = current.targetAppPackage,
+                scheduleStart = current.scheduleStart,
+                scheduleEnd = current.scheduleEnd
             )
             _uiState.value = if (enabled) {
-                settingsUseCase.save(settings).toUiState(darkMode.serviceEnabled)
+                settingsUseCase.save(settings).toUiState(current.serviceEnabled)
             } else {
-                settingsUseCase.disable().toUiState(darkMode.serviceEnabled)
+                settingsUseCase.disable().toUiState(current.serviceEnabled)
             }
         }
     }
 
-    fun onTargetAppChanged(packageName: String?) {
+    fun onTargetAppChanged(packageName: PackageName?) {
         viewModelScope.launch {
             val current = _uiState.value
             val settings = Settings(

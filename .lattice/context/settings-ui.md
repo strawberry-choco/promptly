@@ -12,7 +12,7 @@ created: 2026-06-14
 
 1. **View all current settings** — On launch, user sees every config option loaded from persisted state.
 2. **Toggle Promptly on/off** — Flip switch to enable/disable intervention. Disabling clears cooldown state.
-3. **Pick a target app** — Select from hardcoded curated list (Anki, Medito, None). Persisted immediately.
+3. **Set a target app** — Free-form text entry for Android package name with regex format validation. Persisted immediately. Shows "No target app" when empty.
 4. **Configure cooldown behavior** — Choose Daily Reset (time picker) or N-hour Interval (1–24 selector). Changing type resets cooldown state.
 5. **Set the schedule window** — Start/end time pickers for active period. Supports overnight windows (start > end).
 
@@ -40,7 +40,19 @@ SettingsActivity.onCreate()
   ← Settings → maps to UiState → emitted via StateFlow
 ```
 
-### Flow 2: Save Setting on Change (toggle, picker, time change)
+### Flow 2: Validate and Save Target App (text entry with validation)
+```
+User types in text entry dialog and confirms
+  → SettingsViewModel.onTargetAppChanged(raw: String)
+    → PackageName.fromRaw(raw)  → success → PackageName
+    → PackageName.fromRaw(raw)  → failure → show inline error, abort save
+  → if valid: SettingsUseCase.save(settings.copy(targetAppPackage = packageName))
+    → SettingsRepository.save(settings)
+      → SharedPreferences write (string value or null)
+  ← new UiState emitted via StateFlow ("No target app" when null)
+```
+
+### Flow 3: Save Setting on Change (toggle, picker, time change)
 ```
 User interaction
   → SettingsViewModel.onXChanged(value)
@@ -51,7 +63,7 @@ User interaction
   ← new UiState emitted via StateFlow
 ```
 
-### Flow 3: Change Cooldown Type (resets cooldown state)
+### Flow 4: Change Cooldown Type (resets cooldown state)
 ```
 Same as Flow 2 + after save:
   → SettingsUseCase.save(newSettings)
@@ -59,7 +71,7 @@ Same as Flow 2 + after save:
     → SharedPreferences write (lastTriggerTimestamp = null)
 ```
 
-### Flow 4: Toggle Off (resets cooldown state)
+### Flow 5: Toggle Off (resets cooldown state)
 ```
 Same as Flow 3 — save(enabled = false) + CooldownRepository.clearLastTrigger()
 ```
@@ -73,6 +85,25 @@ Same as Flow 3 — save(enabled = false) + CooldownRepository.clearLastTrigger()
 
 ### Domain model
 ```kotlin
+// domain/model/PackageName.kt
+@JvmInline
+value class PackageName private constructor(val value: String) {
+    companion object {
+        private val PACKAGE_NAME_REGEX =
+            Regex("^[a-zA-Z][a-zA-Z0-9_]*(\\.[a-zA-Z][a-zA-Z0-9_]*)+$")
+
+        fun fromRaw(raw: String): Result<PackageName> {
+            if (raw.length > 200) return Result.failure(
+                IllegalArgumentException("Package name exceeds 200 characters")
+            )
+            if (!PACKAGE_NAME_REGEX.matches(raw)) return Result.failure(
+                IllegalArgumentException("Invalid package name format")
+            )
+            return Result.success(PackageName(raw))
+        }
+    }
+}
+
 // domain/model/CooldownConfig.kt
 sealed interface CooldownConfig {
     data class DailyReset(val resetTime: LocalTime) : CooldownConfig
@@ -85,7 +116,7 @@ sealed interface CooldownConfig {
 data class Settings(
     val enabled: Boolean,
     val cooldownConfig: CooldownConfig,
-    val targetAppPackage: String?,   // null = "No target app"
+    val targetAppPackage: PackageName?,   // null = "No target app"
     val scheduleStart: LocalTime,
     val scheduleEnd: LocalTime
 )
@@ -159,6 +190,9 @@ class SettingsViewModel(
 | 2026-06-15 | Settings persisted to SharedPreferences using "HH:mm:ss" ISO time strings. | Human-readable, easily debuggable, standard Java time format parsing. | Minutes-since-midnight Int — less readable when debugging; custom format string — more code with no benefit. |
 | 2026-06-15 | Cooldown type selection uses `MaterialButtonToggleGroup` (segmented button). | Clean Material 3 appearance, single-selection enforced, naturally shows both options. | `RadioGroup` with MaterialRadioButtons — more vertical space; Spinner/dropdown — hides options behind a tap. |
 | 2026-06-15 | Data layer tests use `verify` on chained `SharedPreferences.Editor` with `returns this` mock config. | `mockk` relaxed mode returns new mock instances for chained calls by default, breaking `verify` assertions. Explicit `every { ... } returns this` enables proper chaining verification. | — |
+| 2026-06-21 | Target app changed from curated list (Anki, Medito, None) to free-form text entry with regex validation. | Requirement spec mandates free-form entry; curated list is too restrictive for real-world use. | Keeping curated list — doesn't match requirements; text field without validation — allows invalid package names to persist. |
+| 2026-06-21 | `PackageName` inline value class with `fromRaw` factory validates format via regex + 200-char limit. | Self-validating value object makes invalid states unrepresentable. Inline class avoids allocation overhead. | Validation in ViewModel — leaks domain rule into UI; raw String — no type safety. |
+| 2026-06-21 | Design reconciled with requirement spec. Blueprint complete ready for implementation. | All four design levels updated to match requirement spec: curated list replaced with free-form text entry + PackageName value object. | N/A |
 
 ## Design Summary
 
@@ -170,6 +204,7 @@ class SettingsViewModel(
 | SettingsUseCase | Domain |
 | Settings (model) | Domain |
 | CooldownConfig (sealed interface) | Domain |
+| PackageName (inline value class) | Domain |
 | SettingsRepository (interface) | Domain |
 | CooldownRepository (interface) | Domain |
 | SettingsRepositoryImpl | Data |
@@ -180,6 +215,7 @@ class SettingsViewModel(
 - `CooldownRepository` — `clearLastTrigger()`
 - `SettingsUseCase` — `load()`, `save()`, `disable()`, `changeCooldownConfig()`
 - `Settings` data class with `CooldownConfig` sum type — illegal states unrepresentable
+- `PackageName` inline value class with `fromRaw(raw: String): Result<PackageName>` factory
 
 ### Architectural constraints
 - Domain layer is pure Kotlin — no Android framework imports
@@ -191,6 +227,7 @@ class SettingsViewModel(
 ### Domain model decisions
 - `Settings` is a value object (immutable, replaced atomically)
 - `CooldownConfig` is a sealed interface sum type with two variants
+- `PackageName` is an inline value class with `fromRaw` factory — validates format at construction
 - No aggregates or entities — settings is a single cohesive config document
 - Domain model doubles as UI state (pure Kotlin, no framework deps)
 
@@ -198,6 +235,7 @@ class SettingsViewModel(
 - Cooldown state reset ownership → orchestrated by `SettingsUseCase`
 - Sum type for cooldown config → `sealed interface CooldownConfig`
 - UiState vs domain model → domain model used directly
+- Target app approach → free-form text entry with `PackageName` value object validation
 
 ### Design status
 **Approved — ready for implementation**
@@ -221,7 +259,7 @@ class SettingsViewModel(
 |------|------|
 | `domain/model/CooldownConfig.kt` | Sealed interface — DailyReset and NHourInterval variants with validation. |
 | `domain/model/Settings.kt` | Immutable settings value object with defaults. |
-| `domain/model/TargetApp.kt` | Curated app list data class + provider (Anki, Medito, None). |
+| `domain/model/PackageName.kt` | Inline value class with `fromRaw` factory — validates format regex + 200-char limit. |
 | `domain/repository/SettingsRepository.kt` | Interface: `load()`, `save()`. |
 | `domain/repository/CooldownRepository.kt` | Interface: `clearLastTrigger()`. |
 | `domain/usecase/SettingsUseCase.kt` | Orchestrator — load, save, disable (clear cooldown), changeCooldownConfig (clear cooldown). |

@@ -1,6 +1,7 @@
 package com.example.promptly.ui.settings
 
 import com.example.promptly.domain.model.CooldownConfig
+import com.example.promptly.domain.model.PackageName
 import com.example.promptly.domain.model.Settings
 import com.example.promptly.domain.usecase.OnboardingUseCase
 import com.example.promptly.domain.usecase.SettingsUseCase
@@ -18,6 +19,7 @@ import kotlinx.coroutines.test.setMain
 import org.junit.jupiter.api.AfterEach
 import org.junit.jupiter.api.Assertions.assertEquals
 import org.junit.jupiter.api.Assertions.assertFalse
+import org.junit.jupiter.api.Assertions.assertNull
 import org.junit.jupiter.api.Assertions.assertTrue
 import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Test
@@ -108,17 +110,32 @@ class SettingsViewModelTest {
     }
 
     @Test
-    fun `onTargetAppChanged calls save with new package`() = runTest(testDispatcher) {
-        val initial = Settings()
+    fun `onTargetAppChanged with null clears target app`() = runTest(testDispatcher) {
+        val initial = Settings(targetAppPackage = PackageName.fromRaw("com.ichi2.anki").getOrThrow())
         coEvery { settingsUseCase.load() } returns initial
         coEvery { onboardingUseCase.checkServiceEnabled() } returns true
         coEvery { settingsUseCase.save(any()) } answers { firstArg() }
 
         val vm = SettingsViewModel(settingsUseCase, onboardingUseCase)
-        vm.onTargetAppChanged("com.ichi2.anki")
+        vm.onTargetAppChanged(null)
 
-        coVerify { settingsUseCase.save(withArg { s -> assertEquals("com.ichi2.anki", s.targetAppPackage) }) }
-        assertEquals("com.ichi2.anki", vm.uiState.first().targetAppPackage)
+        coVerify { settingsUseCase.save(withArg { s -> assertNull(s.targetAppPackage) }) }
+        assertNull(vm.uiState.first().targetAppPackage)
+    }
+
+    @Test
+    fun `onTargetAppChanged with package saves it`() = runTest(testDispatcher) {
+        val initial = Settings()
+        val pkg = PackageName.fromRaw("com.ichi2.anki").getOrThrow()
+        coEvery { settingsUseCase.load() } returns initial
+        coEvery { onboardingUseCase.checkServiceEnabled() } returns true
+        coEvery { settingsUseCase.save(any()) } answers { firstArg() }
+
+        val vm = SettingsViewModel(settingsUseCase, onboardingUseCase)
+        vm.onTargetAppChanged(pkg)
+
+        coVerify { settingsUseCase.save(withArg { s -> assertEquals(pkg, s.targetAppPackage) }) }
+        assertEquals(pkg, vm.uiState.first().targetAppPackage)
     }
 
     @Test
@@ -179,6 +196,4 @@ class SettingsViewModelTest {
         assertEquals(listOf(SettingsEvent.LaunchIntervention), events)
         job.cancel()
     }
-
-
 }

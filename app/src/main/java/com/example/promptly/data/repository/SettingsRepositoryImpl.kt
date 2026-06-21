@@ -2,6 +2,7 @@ package com.example.promptly.data.repository
 
 import android.content.SharedPreferences
 import com.example.promptly.domain.model.CooldownConfig
+import com.example.promptly.domain.model.PackageName
 import com.example.promptly.domain.model.Settings
 import com.example.promptly.domain.repository.SettingsRepository
 import kotlinx.coroutines.Dispatchers
@@ -25,6 +26,7 @@ class SettingsRepositoryImpl(
             )
         }
         val targetAppPackage = prefs.getString(KEY_TARGET_APP, null)
+            ?.let { PackageName.fromRaw(it).getOrNull() }
         val scheduleStart = parseTime(
             prefs.getString(KEY_SCHEDULE_START, DEFAULT_SCHEDULE_START) ?: DEFAULT_SCHEDULE_START
         )
@@ -44,7 +46,7 @@ class SettingsRepositoryImpl(
         withContext(Dispatchers.IO) {
             prefs.edit()
                 .putBoolean(KEY_ENABLED, settings.enabled)
-                .putString(KEY_TARGET_APP, settings.targetAppPackage)
+                .putString(KEY_TARGET_APP, settings.targetAppPackage?.value)
                 .putString(KEY_SCHEDULE_START, formatTime(settings.scheduleStart))
                 .putString(KEY_SCHEDULE_END, formatTime(settings.scheduleEnd))
                 .commit()

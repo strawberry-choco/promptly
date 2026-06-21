@@ -31,7 +31,8 @@ All personas need configuration. Settings are a one-time setup for most, but the
 - Reset time picker (visible when Daily Reset is selected)
 - Interval hours selector (visible when N-hour Interval is selected)
 - Schedule window start and end time pickers
-- Target app picker from a hardcoded curated list
+- Target app text entry: free-form field for entering an Android package name
+- Package name format validation on entry (basic format check, no installation check)
 - All settings persisted to SharedPreferences immediately on change
 
 **Out of scope:**
@@ -40,7 +41,7 @@ All personas need configuration. Settings are a one-time setup for most, but the
 - Multiple configuration profiles
 - Import/export of settings
 - Cloud sync
-- Custom app targets beyond the curated list
+- System app picker or installed-apps browser
 
 ## Boundary Conditions
 
@@ -48,13 +49,17 @@ All personas need configuration. Settings are a one-time setup for most, but the
 - Overnight schedule window (start > end) is supported and interpreted as crossing midnight
 - Settings changes take effect immediately — no save button required
 - App process death: all settings survive via SharedPreferences
+- Package name validation is format-only: must match `^[a-zA-Z][a-zA-Z0-9_]*(\.[a-zA-Z][a-zA-Z0-9_]*)+$` (at least one dot, segments start with letter). Installation check is deferred to redirect time.
+- Empty input clears the target app setting (sets to null). User sees "No target app" displayed.
+- Very long package names (>200 chars) are rejected at input level
 
 ## Assumptions
 
 - SharedPreferences is sufficient for all configuration storage
 - No authentication or multi-user support is needed
 - The app is opened from the launcher to access Settings (no other entry point)
-- The curated target app list is maintained in the app code (not remotely configured)
+- Package name format validation is a basic regex — not a full Android package verification (which requires PackageManager). Installation status is checked at redirect time (handled by Target App Redirect feature).
+- The user knows the package name of their desired target app (no system app picker or browser is provided in this feature)
 
 ## Scenarios
 
@@ -83,22 +88,25 @@ The user flips the global enabled toggle.
 - when the user closes and reopens the app,
 - then the toggle shows the new state.
 
-### Scenario 3: User selects a target app
-The user opens the target app picker and chooses from a hardcoded curated list.
+### Scenario 3: User enters a target app package name
+The user taps the Target App row, types (or edits) an Android package name, and confirms the entry. Includes both valid and invalid input paths.
 
 **Acceptance Criteria:**
-- Given the user taps the Target App picker row,
-- when the picker opens,
-- then a hardcoded list of curated apps is displayed.
-- Given the list is displayed,
-- when the user taps an app,
-- then the app is selected, the picker closes, and the selection is persisted.
-- Given an app was selected,
-- when the Settings screen reappears,
-- then the selected app name is displayed.
-- Given the user selects "None" or clears the selection,
-- when the Settings screen reappears,
-- then "No target app" is displayed.
+- Given the Settings screen is displayed,
+- when the user taps the Target App row,
+- then a text entry dialog opens showing the current package name (or empty placeholder).
+- Given the text entry dialog is open,
+- when the user types a valid package name (e.g., "com.ichi2.anki") and confirms,
+- then the value is persisted to SharedPreferences and the Settings screen displays the entered package name.
+- Given the text entry dialog is open,
+- when the user types an invalid format (no dots, starts with a number, contains spaces) and confirms,
+- then an inline error message is shown and the value is not saved.
+- Given a package name is currently saved,
+- when the user opens the text entry and clears the field,
+- then the target app is set to null and the Settings screen displays "No target app".
+- Given a package name is currently saved,
+- when the user opens the text entry and enters a different valid package name,
+- then the new value replaces the old one in SharedPreferences.
 
 ### Scenario 4: User configures cooldown type
 The user switches between Daily Reset and N-hour Interval.
@@ -134,15 +142,15 @@ The user sets the active hours for the intervention.
 2. **Enabled toggle** — Immediate persistence and cooldown state reset on toggle.
 3. **Cooldown type configuration** — Radio group with conditional TimePicker (Daily) or NumberPicker (Interval); reset cooldown state on change.
 4. **Schedule window pickers** — Two TimePicker views for start and end; support overnight (start > end).
-5. **Target app picker** — Dialog listing hardcoded app names + icons; persist selection as package name.
+5. **Target app text entry** — Text input dialog with regex validation; persist package name string to SharedPreferences; display saved value or "No target app".
 
 ## Open Questions
 
-- [x] What apps should be in the hardcoded curated list? **Resolved**: Anki and Medito.
+- [x] Should validation also check that the package is installed via PackageManager at entry time, or defer entirely to Target App Redirect's existing uninstall check at redirect time? **Resolved**: Defer to redirect time. Format-only validation at entry. Target App Redirect handles the uninstall case.
 
 ## Glossary
 
-- **Curated target app list** — The two apps the user can select as the intervention target: Anki (flashcard app) and Medito (meditation app). Defined in `TargetAppProvider.kt`.
+- **Package name** — Android reverse-domain application identifier (e.g., `com.ichi2.anki`). Used by PackageManager to resolve and launch apps.
 
 ## Links
 

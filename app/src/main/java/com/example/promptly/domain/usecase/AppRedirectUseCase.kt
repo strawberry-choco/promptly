@@ -10,7 +10,7 @@ class AppRedirectUseCase(
 ) {
     suspend fun evaluate(): RedirectDecision {
         val settings = settingsRepository.load()
-        val packageName = settings.targetAppPackage ?: return RedirectDecision.NoTarget
+        val packageName = settings.targetAppPackage?.value ?: return RedirectDecision.NoTarget
         return if (targetAppRepository.isInstalled(packageName)) {
             RedirectDecision.Ready(packageName)
         } else {

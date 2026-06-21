@@ -28,8 +28,9 @@ class SettingsTest {
     @Test
     fun `copy with targetAppPackage`() {
         val settings = Settings()
-        val updated = settings.copy(targetAppPackage = "com.example.app")
-        assertEquals("com.example.app", updated.targetAppPackage)
+        val pkg = PackageName.fromRaw("com.example.app").getOrThrow()
+        val updated = settings.copy(targetAppPackage = pkg)
+        assertEquals(pkg, updated.targetAppPackage)
     }
 
     @Test
@@ -42,10 +43,11 @@ class SettingsTest {
 
     @Test
     fun `copy preserves other fields`() {
+        val pkg = PackageName.fromRaw("com.ichi2.anki").getOrThrow()
         val original = Settings(
             enabled = true,
             cooldownConfig = CooldownConfig.NHourInterval(6),
-            targetAppPackage = "com.ichi2.anki",
+            targetAppPackage = pkg,
             scheduleStart = LocalTime.of(8, 0),
             scheduleEnd = LocalTime.of(22, 0)
         )
