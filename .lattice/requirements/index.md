@@ -22,3 +22,4 @@ Settings configuration (target app, cooldown, schedule) plus the intervention sc
 | Feature | Summary | Status | Priority | Depends On |
 |---|---|---|---|---|
 | [Manual Intervention Launch](features/manual-intervention-launch.md) | Button in settings to launch the intervention immediately, bypassing cooldown and schedule checks | draft | P1 | — |
+| [Remove Intervention Pinning](features/remove-intervention-pinning.md) | Remove lock task pinning from the intervention so redirect works reliably and Back/Home navigation is restored | draft | P1 | — |

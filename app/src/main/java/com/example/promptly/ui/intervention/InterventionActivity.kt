@@ -10,13 +10,10 @@ import androidx.lifecycle.ViewModel
 import androidx.lifecycle.ViewModelProvider
 import androidx.lifecycle.lifecycleScope
 import androidx.lifecycle.repeatOnLifecycle
-import com.example.promptly.data.repository.LockTaskRepositoryImpl
 import com.example.promptly.data.repository.SettingsRepositoryImpl
 import com.example.promptly.data.repository.TargetAppRepositoryImpl
 import com.example.promptly.databinding.ActivityInterventionBinding
-import com.example.promptly.domain.model.InterventionConfig
 import com.example.promptly.domain.usecase.AppRedirectUseCase
-import com.example.promptly.domain.usecase.InterventionUseCase
 import kotlinx.coroutines.launch
 
 class InterventionActivity : AppCompatActivity() {
@@ -35,16 +32,6 @@ class InterventionActivity : AppCompatActivity() {
 
         observeState()
         viewModel.onCreated()
-    }
-
-    override fun onPause() {
-        super.onPause()
-        viewModel.onPause()
-    }
-
-    override fun onResume() {
-        super.onResume()
-        viewModel.onResumeAfterCall()
     }
 
     private fun observeState() {
@@ -99,12 +86,10 @@ class InterventionActivity : AppCompatActivity() {
         @Suppress("UNCHECKED_CAST")
         override fun <T : ViewModel> create(modelClass: Class<T>): T {
             val prefs = getSharedPreferences(PREFS_NAME, MODE_PRIVATE)
-            val lockTaskRepo = LockTaskRepositoryImpl(this@InterventionActivity)
-            val interventionUseCase = InterventionUseCase(lockTaskRepo)
             val settingsRepo = SettingsRepositoryImpl(prefs)
             val targetAppRepo = TargetAppRepositoryImpl(packageManager)
             val appRedirectUseCase = AppRedirectUseCase(settingsRepo, targetAppRepo)
-            return InterventionViewModel(interventionUseCase, appRedirectUseCase) as T
+            return InterventionViewModel(appRedirectUseCase) as T
         }
     }
 

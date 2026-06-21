@@ -4,7 +4,6 @@ import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.example.promptly.domain.model.RedirectDecision
 import com.example.promptly.domain.usecase.AppRedirectUseCase
-import com.example.promptly.domain.usecase.InterventionUseCase
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
@@ -12,7 +11,6 @@ import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.launch
 
 class InterventionViewModel(
-    private val interventionUseCase: InterventionUseCase,
     private val appRedirectUseCase: AppRedirectUseCase
 ) : ViewModel() {
 
@@ -21,16 +19,11 @@ class InterventionViewModel(
 
     fun onCreated(preRedirectDelayMs: Long = PRE_REDIRECT_DELAY_MS) {
         viewModelScope.launch {
-            val config = interventionUseCase.prepare()
-            _uiState.value = _uiState.value.copy(
-                mode = InterventionMode.Showing,
-                config = config
-            )
+            _uiState.value = _uiState.value.copy(mode = InterventionMode.Showing)
             delay(preRedirectDelayMs)
             val decision = appRedirectUseCase.evaluate()
             when (decision) {
                 is RedirectDecision.Ready -> {
-                    interventionUseCase.dismiss()
                     _uiState.value = _uiState.value.copy(
                         mode = InterventionMode.Redirecting(decision.packageName)
                     )
@@ -56,29 +49,11 @@ class InterventionViewModel(
         )
     }
 
+    fun onDismiss() {
+        _uiState.value = _uiState.value.copy(mode = InterventionMode.Dismissing)
+    }
+
     companion object {
         internal const val PRE_REDIRECT_DELAY_MS = 1500L
-    }
-
-    fun onDismiss() {
-        viewModelScope.launch {
-            interventionUseCase.dismiss()
-            _uiState.value = _uiState.value.copy(mode = InterventionMode.Dismissing)
-        }
-    }
-
-    fun onPause() {
-        val current = _uiState.value
-        if (current.mode == InterventionMode.Showing) {
-            _uiState.value = current.copy(isCallInterrupted = true)
-        }
-    }
-
-    fun onResumeAfterCall() {
-        if (!_uiState.value.isCallInterrupted) return
-        viewModelScope.launch {
-            interventionUseCase.onResurface()
-            _uiState.value = _uiState.value.copy(isCallInterrupted = false)
-        }
     }
 }

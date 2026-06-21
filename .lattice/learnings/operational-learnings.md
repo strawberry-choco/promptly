@@ -19,6 +19,7 @@ Experiential patterns from practice. Complements standards (what should be) with
 - 2026-06-19 [implementation] Inject ZoneId with systemDefault default for timezone-aware domain services — When a pure domain service computes dates/times (daily reset, schedule windows), accept `ZoneId` as a constructor parameter defaulting to `ZoneId.systemDefault()`. Tests inject a fixed zone for deterministic results without Android instrumentation. Production behavior unchanged; test determinism guaranteed.
 - 2026-06-20 [implementation] Timing concerns (delays, countdowns) in ViewModel, not domain — When a feature needs a brief delay before acting (e.g., 1.5s auto-redirect), the delay belongs in the ViewModel via `kotlinx.coroutines.delay()`. The domain use case is synchronous from the caller's perspective; timing is a UI-layer concern. Keeps domain logic testable without virtual time.
 - 2026-06-20 [implementation] Buffer capacity for ViewModel-emitted SharedFlow events — When a ViewModel emits one-shot events via SharedFlow to an Activity collector, use `extraBufferCapacity = 1` on the `MutableSharedFlow`. The default (`extraBufferCapacity = 0`) causes `emit` to suspend when no collector is attached (test setup or lifecycle timing gaps). Buffer of 1 preserves at-most-once semantics while avoiding suspension in tests and production.
+- 2026-06-21 [implementation] Coroutine scope only for actual async work — When a ViewModel method becomes synchronous after removing an async call (e.g., `onDismiss` no longer calls a use case), remove the surrounding `viewModelScope.launch`. Synchronous state transitions don't need a coroutine scope — keeps the call site simpler and avoids unnecessary coroutine overhead.
 
 ## Process
 
@@ -31,4 +32,4 @@ Experiential patterns from practice. Complements standards (what should be) with
 <!-- Bug root causes, failure modes, fragile areas, boundary condition gaps -->
 
 ## Structural Health
-<!-- Architectural drift, debt accumulation, coupling issues, migration lessons -->
+- 2026-06-21 [implementation] Inside-out deletion order for multi-layer removal — When removing a feature that spans layers, delete in dependency order: Domain models → Domain interfaces → Domain use cases → Data implementations → UI modifications. This guarantees no compile errors at any intermediate step and surfaces missing references layer by layer.
