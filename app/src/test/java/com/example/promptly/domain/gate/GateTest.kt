@@ -201,4 +201,30 @@ class GateTest {
         assertTrue(gate.decide(foregroundPackage = "com.example.freshapp") is GateDecision.Show)
         assertTrue(cooldownRepository.savedTimestamps.isEmpty())
     }
-}
+
+    @Test
+    fun `confirm persists the claimed trigger timestamp verbatim`() = runTest {
+        val settingsRepository = FakeSettingsRepository(
+            Settings(
+                enabled = true,
+                cooldownConfig = CooldownConfig.NHourInterval(2),
+                targetAppPackage = null
+            )
+        )
+        val cooldownRepository = FakeCooldownRepository(lastTriggerEpochMillis = null)
+        var now = eligibleNowEpochMillis
+        val gate = Gate(
+            settingsRepository,
+            cooldownRepository,
+            clock = { now },
+            zone = zone
+        )
+
+        val decision = gate.decide(foregroundPackage = "com.example.anyapp")
+        val claim = (decision as GateDecision.Show).pendingClaim
+        now += 5_000
+
+        gate.confirm(claim)
+
+        assertEquals(listOf(claim.triggerEpochMillis), cooldownRepository.savedTimestamps)
+    }}

@@ -45,4 +45,7 @@ class Gate(
 
         return GateDecision.Show(PendingClaim(triggerEpochMillis = clock()))
     }
-}
+
+    suspend fun confirm(claim: PendingClaim) {
+        cooldownRepository.saveLastTriggerEpochMillis(claim.triggerEpochMillis)
+    }}
