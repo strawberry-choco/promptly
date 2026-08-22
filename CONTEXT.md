@@ -27,8 +27,11 @@
 **Cooldown**
 : The behaviour where, once an Intervention has been triggered (shown on unlock), it will not appear again on subsequent unlocks until a reset event occurs.
 
+**Confirming**
+: The second phase of an eligible unlock, when the Intervention is actually displayed. The pending claim travels from the Gate decision to the Intervention screen, and displaying it hands the claim to the Gate, which persists the Cooldown anchored to the claimed unlock moment. An unconfirmed pending claim expires after a freshness window, so a silent launch failure self-heals on the next unlock.
+
 **Gate**
-: The module that decides whether an unlock triggers an Intervention. It weighs enablement, the schedule window, and the Cooldown together, suppresses repeated evaluations for the same foreground package, and records the Cooldown when an unlock passes all conditions.
+: The module that decides whether an unlock triggers an Intervention. It weighs enablement, the schedule window, and the Cooldown together, suppresses repeated evaluations for the same foreground package, and returns a Show decision carrying a pending claim when an unlock passes all conditions.
 
 ## Technical constraints
 
