@@ -252,4 +252,36 @@ class GateTest {
 
         assertEquals(GateDecision.Skip, gate.decide(foregroundPackage = "com.example.secondapp"))
         assertTrue(cooldownRepository.savedTimestamps.isEmpty())
+    }
+    @Test
+    fun `an evaluation more than the freshness window after an unconfirmed pending replaces it and proceeds`() = runTest {
+        val settingsRepository = FakeSettingsRepository(
+            Settings(
+                enabled = true,
+                cooldownConfig = CooldownConfig.NHourInterval(2),
+                targetAppPackage = null
+            )
+        )
+        val cooldownRepository = FakeCooldownRepository(lastTriggerEpochMillis = null)
+        var now = eligibleNowEpochMillis
+        val gate = Gate(
+            settingsRepository,
+            cooldownRepository,
+            clock = { now },
+            zone = zone,
+            pendingClaimFreshnessMillis = 10_000L
+        )
+
+        val firstClaim =
+            (gate.decide(foregroundPackage = "com.example.firstapp") as GateDecision.Show)
+                .pendingClaim
+        now += 11_000
+
+        val secondDecision =
+            gate.decide(foregroundPackage = "com.example.secondapp") as GateDecision.Show
+        val secondClaim = secondDecision.pendingClaim
+
+        assertEquals(eligibleNowEpochMillis + 11_000, secondClaim.triggerEpochMillis)
+        assertTrue(firstClaim.isUnconfirmed)
+        assertTrue(cooldownRepository.savedTimestamps.isEmpty())
     }}
