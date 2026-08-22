@@ -26,5 +26,5 @@ fun Settings.toUiState(serviceEnabled: Boolean = false): SettingsUiState = Setti
     scheduleStart = scheduleStart,
     scheduleEnd = scheduleEnd,
     serviceEnabled = serviceEnabled,
-    showBanner = !serviceEnabled
+    showBanner = !serviceEnabled && !enabled
 )
