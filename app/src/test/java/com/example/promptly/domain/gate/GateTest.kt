@@ -227,4 +227,29 @@ class GateTest {
         gate.confirm(claim)
 
         assertEquals(listOf(claim.triggerEpochMillis), cooldownRepository.savedTimestamps)
+    }
+    @Test
+    fun `a second eligible evaluation within the freshness window skips without launching or persisting`() = runTest {
+        val settingsRepository = FakeSettingsRepository(
+            Settings(
+                enabled = true,
+                cooldownConfig = CooldownConfig.NHourInterval(2),
+                targetAppPackage = null
+            )
+        )
+        val cooldownRepository = FakeCooldownRepository(lastTriggerEpochMillis = null)
+        var now = eligibleNowEpochMillis
+        val gate = Gate(
+            settingsRepository,
+            cooldownRepository,
+            clock = { now },
+            zone = zone,
+            pendingClaimFreshnessMillis = 10_000L
+        )
+
+        assertTrue(gate.decide(foregroundPackage = "com.example.firstapp") is GateDecision.Show)
+        now += 3_000
+
+        assertEquals(GateDecision.Skip, gate.decide(foregroundPackage = "com.example.secondapp"))
+        assertTrue(cooldownRepository.savedTimestamps.isEmpty())
     }}

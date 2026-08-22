@@ -20,14 +20,25 @@ class Gate(
     private val settingsRepository: SettingsRepository,
     private val cooldownRepository: CooldownRepository,
     private val clock: () -> Long = { System.currentTimeMillis() },
-    private val zone: ZoneId = ZoneId.systemDefault()
+    private val zone: ZoneId = ZoneId.systemDefault(),
+    private val pendingClaimFreshnessMillis: Long = 10_000L
 ) {
 
     private val eligibilityService = CooldownEligibilityService(zone)
 
     private var lastForegroundPackage: String? = null
 
+    private var pendingClaim: PendingClaim? = null
+
     suspend fun decide(foregroundPackage: String): GateDecision {
+        val now = clock()
+        pendingClaim?.let { pending ->
+            if (now - pending.triggerEpochMillis < pendingClaimFreshnessMillis) {
+                return GateDecision.Skip
+            } else {
+                pendingClaim = null
+            }
+        }
         if (foregroundPackage == lastForegroundPackage) return GateDecision.Skip
         lastForegroundPackage = foregroundPackage
 
@@ -39,11 +50,13 @@ class Gate(
             scheduleStart = settings.scheduleStart,
             scheduleEnd = settings.scheduleEnd,
             lastTriggerEpochMillis = lastTrigger,
-            nowEpochMillis = clock()
+            nowEpochMillis = now
         )
         if (result != EligibilityResult.Eligible) return GateDecision.Skip
 
-        return GateDecision.Show(PendingClaim(triggerEpochMillis = clock()))
+        val claim = PendingClaim(triggerEpochMillis = clock())
+        pendingClaim = claim
+        return GateDecision.Show(claim)
     }
 
     suspend fun confirm(claim: PendingClaim) {
