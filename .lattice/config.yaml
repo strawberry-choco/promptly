@@ -1,6 +1,0 @@
-version: 1
-language: kotlin
-paths:
-  knowledge_base: .lattice/standards/knowledge-base.md
-  language_idioms: .lattice/standards/language-idioms.md
-  architecture: .lattice/standards/architecture.md
