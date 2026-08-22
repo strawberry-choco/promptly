@@ -32,10 +32,15 @@ class PromptlyAccessibilityService : AccessibilityService() {
         val packageName = event.packageName?.toString() ?: return
 
         scope.launch {
-            if (gate.decide(foregroundPackage = packageName) != GateDecision.Launch) return@launch
+            val decision = gate.decide(foregroundPackage = packageName)
+            if (decision !is GateDecision.Show) return@launch
 
             val intent = Intent(this@PromptlyAccessibilityService, InterventionActivity::class.java).apply {
                 addFlags(Intent.FLAG_ACTIVITY_NEW_TASK or Intent.FLAG_ACTIVITY_NO_USER_ACTION)
+                putExtra(
+                    InterventionActivity.EXTRA_PENDING_TRIGGER_EPOCH_MILLIS,
+                    decision.pendingClaim.triggerEpochMillis
+                )
             }
             startActivity(intent)
         }

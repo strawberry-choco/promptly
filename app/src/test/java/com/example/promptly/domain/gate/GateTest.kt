@@ -51,7 +51,7 @@ class GateTest {
     private val eligibleNowEpochMillis = 1787392800000L
 
     @Test
-    fun `eligible unlock launches and consumes cooldown`() = runTest {
+    fun `eligible evaluation shows with a pending claim and persists nothing`() = runTest {
         val settingsRepository = FakeSettingsRepository(
             Settings(
                 enabled = true,
@@ -69,8 +69,11 @@ class GateTest {
 
         val decision = gate.decide(foregroundPackage = "com.example.anyapp")
 
-        assertEquals(GateDecision.Launch, decision)
-        assertEquals(listOf(eligibleNowEpochMillis), cooldownRepository.savedTimestamps)
+        assertTrue(decision is GateDecision.Show)
+        val shown = decision as GateDecision.Show
+        assertEquals(eligibleNowEpochMillis, shown.pendingClaim.triggerEpochMillis)
+        assertTrue(shown.pendingClaim.isUnconfirmed)
+        assertTrue(cooldownRepository.savedTimestamps.isEmpty())
     }
 
     @Test
@@ -90,9 +93,9 @@ class GateTest {
             zone = zone
         )
 
-        assertEquals(GateDecision.Launch, gate.decide(foregroundPackage = "com.example.firstapp"))
+        assertTrue(gate.decide(foregroundPackage = "com.example.firstapp") is GateDecision.Show)
         assertEquals(GateDecision.Skip, gate.decide(foregroundPackage = "com.example.firstapp"))
-        assertEquals(1, cooldownRepository.savedTimestamps.size)
+        assertEquals(0, cooldownRepository.savedTimestamps.size)
         assertEquals(1, cooldownRepository.loadCalls)
     }
 
@@ -169,7 +172,7 @@ class GateTest {
     }
 
     @Test
-    fun `blocked then enabled transition launches nothing while blocked and launches a fresh package after enabling`() = runTest {
+    fun `blocked then enabled transition skips while blocked and shows for a fresh package after enabling`() = runTest {
         val settingsRepository = FakeSettingsRepository(
             Settings(
                 enabled = false,
@@ -195,7 +198,7 @@ class GateTest {
         )
 
         assertEquals(GateDecision.Skip, gate.decide(foregroundPackage = "com.example.blockedapp"))
-        assertEquals(GateDecision.Launch, gate.decide(foregroundPackage = "com.example.freshapp"))
-        assertEquals(listOf(eligibleNowEpochMillis), cooldownRepository.savedTimestamps)
+        assertTrue(gate.decide(foregroundPackage = "com.example.freshapp") is GateDecision.Show)
+        assertTrue(cooldownRepository.savedTimestamps.isEmpty())
     }
 }

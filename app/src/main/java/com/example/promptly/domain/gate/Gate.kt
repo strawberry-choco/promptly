@@ -7,9 +7,14 @@ import com.example.promptly.domain.service.CooldownEligibilityService
 import java.time.ZoneId
 
 sealed class GateDecision {
-    data object Launch : GateDecision()
+    data class Show(val pendingClaim: PendingClaim) : GateDecision()
     data object Skip : GateDecision()
 }
+
+data class PendingClaim(
+    val triggerEpochMillis: Long,
+    val isUnconfirmed: Boolean = true
+)
 
 class Gate(
     private val settingsRepository: SettingsRepository,
@@ -38,7 +43,6 @@ class Gate(
         )
         if (result != EligibilityResult.Eligible) return GateDecision.Skip
 
-        cooldownRepository.saveLastTriggerEpochMillis(clock())
-        return GateDecision.Launch
+        return GateDecision.Show(PendingClaim(triggerEpochMillis = clock()))
     }
 }

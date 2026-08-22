@@ -108,6 +108,7 @@ class InterventionActivity : AppCompatActivity() {
     }
 
     companion object {
+        const val EXTRA_PENDING_TRIGGER_EPOCH_MILLIS = "extra_pending_trigger_epoch_millis"
         private const val PREFS_NAME = "promptly_prefs"
     }
 }
