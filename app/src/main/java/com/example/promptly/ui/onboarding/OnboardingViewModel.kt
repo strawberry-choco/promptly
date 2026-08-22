@@ -29,6 +29,7 @@ class OnboardingViewModel(
     }
 
     fun onSkip() {
+        hasNavigated = true
         viewModelScope.launch {
             onboardingUseCase.skip()
         }

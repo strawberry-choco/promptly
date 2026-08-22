@@ -19,6 +19,7 @@ class ServiceStateRepositoryImplTest {
 
     @BeforeEach
     fun setUp() {
+        every { context.contentResolver } returns mockk()
         repo = ServiceStateRepositoryImpl(context)
     }
 
