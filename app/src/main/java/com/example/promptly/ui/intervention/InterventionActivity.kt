@@ -13,9 +13,11 @@ import androidx.lifecycle.ViewModel
 import androidx.lifecycle.ViewModelProvider
 import androidx.lifecycle.lifecycleScope
 import androidx.lifecycle.repeatOnLifecycle
+import com.example.promptly.data.repository.CooldownRepositoryImpl
 import com.example.promptly.data.repository.SettingsRepositoryImpl
 import com.example.promptly.data.repository.TargetAppRepositoryImpl
 import com.example.promptly.databinding.ActivityInterventionBinding
+import com.example.promptly.domain.gate.Gate
 import com.example.promptly.domain.usecase.AppRedirectUseCase
 import kotlinx.coroutines.launch
 
@@ -102,8 +104,10 @@ class InterventionActivity : AppCompatActivity() {
             val prefs = getSharedPreferences(PREFS_NAME, MODE_PRIVATE)
             val settingsRepo = SettingsRepositoryImpl(prefs)
             val targetAppRepo = TargetAppRepositoryImpl(packageManager)
+            val cooldownRepo = CooldownRepositoryImpl(prefs)
+            val gate = Gate(settingsRepo, cooldownRepo)
             val appRedirectUseCase = AppRedirectUseCase(settingsRepo, targetAppRepo)
-            return InterventionViewModel(appRedirectUseCase) as T
+            return InterventionViewModel(appRedirectUseCase, gate) as T
         }
     }
 

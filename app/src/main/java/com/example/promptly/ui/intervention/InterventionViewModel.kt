@@ -3,6 +3,8 @@ package com.example.promptly.ui.intervention
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.example.promptly.domain.model.RedirectDecision
+import com.example.promptly.domain.gate.Gate
+import com.example.promptly.domain.gate.PendingClaim
 import com.example.promptly.domain.usecase.AppRedirectUseCase
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.MutableStateFlow
@@ -11,7 +13,8 @@ import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.launch
 
 class InterventionViewModel(
-    private val appRedirectUseCase: AppRedirectUseCase
+    private val appRedirectUseCase: AppRedirectUseCase,
+    private val gate: Gate
 ) : ViewModel() {
 
     private val _uiState = MutableStateFlow(InterventionUiState())
@@ -39,6 +42,12 @@ class InterventionViewModel(
                     )
                 }
             }
+        }
+    }
+
+    fun onShown(claim: PendingClaim) {
+        viewModelScope.launch {
+            gate.confirm(claim)
         }
     }
 
