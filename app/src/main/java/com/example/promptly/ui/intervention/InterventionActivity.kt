@@ -18,6 +18,7 @@ import com.example.promptly.data.repository.SettingsRepositoryImpl
 import com.example.promptly.data.repository.TargetAppRepositoryImpl
 import com.example.promptly.databinding.ActivityInterventionBinding
 import com.example.promptly.domain.gate.Gate
+import com.example.promptly.domain.gate.PendingClaim
 import com.example.promptly.domain.usecase.AppRedirectUseCase
 import kotlinx.coroutines.launch
 
@@ -48,6 +49,13 @@ class InterventionActivity : AppCompatActivity() {
 
         observeState()
         viewModel.onCreated()
+        val pendingTriggerEpochMillis = intent.getLongExtra(
+            EXTRA_PENDING_TRIGGER_EPOCH_MILLIS,
+            Long.MIN_VALUE
+        )
+        if (pendingTriggerEpochMillis != Long.MIN_VALUE) {
+            viewModel.onShown(PendingClaim(triggerEpochMillis = pendingTriggerEpochMillis))
+        }
     }
 
     private fun observeState() {
