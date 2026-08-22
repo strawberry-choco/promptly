@@ -27,6 +27,9 @@
 **Cooldown**
 : The behaviour where, once an Intervention has been triggered (shown on unlock), it will not appear again on subsequent unlocks until a reset event occurs.
 
+**Gate**
+: The module that decides whether an unlock triggers an Intervention. It weighs enablement, the schedule window, and the Cooldown together, suppresses repeated evaluations for the same foreground package, and records the Cooldown when an unlock passes all conditions.
+
 ## Technical constraints
 
 - **Unlock detection**: Accessibility Service registers a `BroadcastReceiver` for `ACTION_USER_PRESENT`.
